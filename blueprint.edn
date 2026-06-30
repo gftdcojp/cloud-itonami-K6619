@@ -1,0 +1,10 @@
+{:itonami.blueprint/id "cloud-itonami-6619"
+ :itonami.blueprint/name "Card Transaction Processing and Settlement"
+ :itonami.blueprint/isic-rev5 "6619"
+ :itonami.blueprint/domain :finance/card-settlement
+ :itonami.blueprint/license "AGPL-3.0-or-later"
+ :itonami.blueprint/social-impact [:financial-inclusion :consumer-protection :transparency]
+ :itonami.blueprint/governor :card-settlement-governor
+ :itonami.blueprint/required-technologies [:card :banking :swift :identity :forms :dmn :bpmn :audit-ledger]
+ :itonami.blueprint/optional-technologies [:optimization]
+ :itonami.blueprint/status :public-oss}
