@@ -203,6 +203,7 @@ capability reference.
 | `src/card/operation.cljc` | **OperationActor** -- langgraph-clj StateGraph |
 | `src/card/sim.cljc` | demo driver |
 | `test/card/*_test.clj` | governor contract · phase invariants · store parity · registry conformance · facts coverage |
+| `wasm/settlement_authorized.kotoba` | `.kotoba`-wasm port of `settlement-amount-exceeds-authorized?`'s pure comparison core, compiled via `kotoba wasm emit` and hosted under `kototama.tender` (see `wasm/README.md`) |
 
 ## Business-process coverage (honest)
 
