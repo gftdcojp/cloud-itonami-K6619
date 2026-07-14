@@ -1,0 +1,20 @@
+(ns cloud-itonami-settlement-authorized)
+
+(defn settlement-within-authorized? [settlement-amount authorized-amount]
+  (<= settlement-amount authorized-amount))
+
+;; ABI: `main` stays 0-arity (the compiler rejects a parameterized main --
+;; :main-arity, see kotoba-lang/kotoba's compile-wasm-expr) and reads its
+;; two real i32 inputs out of the exported linear memory instead, at fixed
+;; byte offsets a host writes into before calling main() (same convention
+;; as cloud-itonami-isic-6492's affordability.kotoba,
+;; cloud-itonami-isic-6511's underwriting_decision.kotoba, and
+;; cloud-itonami-isic-6512's claim_coverage.kotoba):
+;;   offset 0: settlement-amount   (i32, smallest currency unit / cents)
+;;   offset 4: authorized-amount   (i32, cents)
+;; Returns 1 (settlement within authorized -- settlement-amount <=
+;; authorized-amount, i.e. NOT a violation) or 0 (settlement exceeds
+;; authorized -- a HARD violation per card.governor/
+;; settlement-amount-exceeds-authorized-violations).
+(defn main []
+  (settlement-within-authorized? (mem-i32-at 0 0) (mem-i32-at 0 4)))

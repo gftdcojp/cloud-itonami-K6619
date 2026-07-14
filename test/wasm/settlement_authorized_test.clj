@@ -1,0 +1,44 @@
+(ns wasm.settlement-authorized-test
+  "Hosts wasm/settlement_authorized.wasm (compiled from
+  wasm/settlement_authorized.kotoba, see wasm/README.md) via
+  kototama.tender -- proves card.governor's settlement-amount-exceeds-
+  authorized check (`settlement-amount-exceeds-authorized-violations` in
+  src/card/governor.cljc, backed by `card.registry/settlement-amount-
+  exceeds-authorized?`) runs as a real WASM guest, not just as JVM
+  Clojure.
+
+  ABI: main is 0-arity (kotoba wasm emit rejects a parameterized main --
+  :main-arity); the two real i32 inputs are written into the guest's
+  exported linear memory at fixed offsets before calling main() -- see
+  wasm/settlement_authorized.kotoba's ns docstring for the offset
+  layout."
+  (:require [clojure.java.io :as io]
+            [clojure.test :refer [deftest is testing]]
+            [kototama.contract :as contract]
+            [kototama.tender :as tender]))
+
+(defn- wasm-bytes []
+  (.readAllBytes (io/input-stream (io/file "wasm/settlement_authorized.wasm"))))
+
+(defn- run-settlement-within-authorized? [settlement-amount authorized-amount]
+  (let [instance (tender/instantiate (wasm-bytes) [] (contract/host-caps {}))
+        memory (.memory instance)]
+    (.writeI32 memory 0 settlement-amount)
+    (.writeI32 memory 4 authorized-amount)
+    (tender/call-main instance)))
+
+(deftest settlement-authorized-wasm-approves-well-within-authorized
+  (testing "settlement-amount well below authorized-amount -> within authorized"
+    (is (= 1 (run-settlement-within-authorized? 200000 1000000)))))
+
+(deftest settlement-authorized-wasm-rejects-exceeding-authorized
+  (testing "settlement-amount above authorized-amount -> exceeds authorized"
+    (is (= 0 (run-settlement-within-authorized? 1500000 1000000)))))
+
+(deftest settlement-authorized-wasm-approves-exact-boundary
+  (testing "settlement-amount exactly equal to authorized-amount -> within authorized (<=)"
+    (is (= 1 (run-settlement-within-authorized? 1000000 1000000)))))
+
+(deftest settlement-authorized-wasm-rejects-off-by-one-over
+  (testing "settlement-amount one cent above authorized-amount -> exceeds authorized"
+    (is (= 0 (run-settlement-within-authorized? 1000001 1000000)))))
